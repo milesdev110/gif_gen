@@ -10,7 +10,7 @@ async function extractFrames(filename) {
     if (!fs.existsSync(framesDir)) {
       fs.mkdirSync(framesDir);
     }
-    await execAsync(`ffmpeg -i ${filename} -vf fps=1 frames/frame_%04d.png`);
+    await execAsync(`ffmpeg -i ${filename} -vf fps=3 frames/frame_%04d.png`);
     console.log('帧提取完成');
   } catch (error) {
     console.error(`帧提取失败: ${error}`);
@@ -81,8 +81,10 @@ async function generateGif() {
 
     // 第二步：生成 GIF
     console.log('开始合成 GIF...');
+    const timeStamp = Date.now();
+    const filename = `output_${timeStamp}.gif`;
     const { stdout: gifStdout, stderr: gifStderr } = await execAsync(
-      'ffmpeg -framerate 10 -i nobg_frames/nobg_frame_%04d.png -i nobg_frames/palette.png -lavfi "paletteuse" nobg_frames/output.gif'
+      `ffmpeg -framerate 10 -i nobg_frames/nobg_frame_%04d.png -i nobg_frames/palette.png -lavfi "paletteuse" data/${filename}`
     );
     
     if (gifStderr) {
@@ -91,6 +93,7 @@ async function generateGif() {
     console.log(`GIF 生成 stdout: ${gifStdout}`);
 
     console.log('GIF 生成完成！');
+    return filename;
   } catch (error) {
     console.error(`执行出错: ${error.message}`);
   }
@@ -101,9 +104,20 @@ async function video2gif(req, res) {
   console.time('总耗时');
   console.log(req.files); 
  
-  // await extractFrames('input.mp4');
-  // await removeBackground();
-  // await generateGif();
+  try {
+
+    // 删除 frames 和 nobg_frames 目录及其内容
+    const framesDir = join(process.cwd(), 'frames');
+    const nobgFramesDir = join(process.cwd(), 'nobg_frames');
+    if (fs.existsSync(framesDir)) {
+      fs.rmSync(framesDir, { recursive: true, force: true });
+    }
+    if (fs.existsSync(nobgFramesDir)) {
+      fs.rmSync(nobgFramesDir, { recursive: true, force: true });
+    }
+  await extractFrames(req.files[0].path);
+  await removeBackground();
+  const gifName = await generateGif();
 /**
  * [
   {
@@ -119,7 +133,11 @@ async function video2gif(req, res) {
 ]
  */
   console.timeEnd('总耗时');
-  res.status(500).send('gif ok');
+  res.status(200).send(`http://97.64.21.158:3000/files/${gifName}`);
+  } catch (error) {
+    console.error('视频转GIF失败:', error);
+    res.status(500).send('视频转GIF失败');
+  }
 
 }
 

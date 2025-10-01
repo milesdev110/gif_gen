@@ -32,6 +32,7 @@ const uploadFiles = multer({ storage: storage });
 
 const app = express();
 const port = 3000;
+app.use('/files', express.static('data')); // 静态文件服务
 
 const imageEditer = new ImageEditer(this);
 app.post(
