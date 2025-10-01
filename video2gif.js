@@ -97,15 +97,30 @@ async function generateGif() {
 }
 
 // 主执行流程
-async function main() {
+async function video2gif(req, res) {
   console.time('总耗时');
-  
-  await extractFrames('input.mp4');
-  await removeBackground();
-  await generateGif();
-
+  console.log(req.files); 
+ 
+  // await extractFrames('input.mp4');
+  // await removeBackground();
+  // await generateGif();
+/**
+ * [
+  {
+    fieldname: 'files',
+    originalname: '12345.mp4',
+    encoding: '7bit',
+    mimetype: 'video/mp4',
+    destination: '/root/yykai_dir/gif_gen/data/uploads',
+    filename: '1759303092510-164188984-12345.mp4',
+    path: '/root/yykai_dir/gif_gen/data/uploads/1759303092510-164188984-12345.mp4',
+    size: 1238749
+  }
+]
+ */
   console.timeEnd('总耗时');
+  res.status(500).send('gif ok');
+
 }
 
-// 执行主流程
-main();
+module.exports = { video2gif };
