@@ -7,22 +7,17 @@ import axios from 'axios';
 export class ImageEditer {
     constructor() {}
 
-    async getFileUrl(file: Express.Multer.File): Promise<string> {
+    async getFileUrl(file) {
       if (!file || !file.path) {
-        console.error(`file not found`);
+        console.error('File not found');
         return "file empty";
       }
 
       try {
-        //console.log('File path:', file.path);
-        const filename = file.originalname;
-        //console.log('File name:', filename);
         const fileInputPath = path.join(
-          process.cwd(), // /root/xdata3/data3-agent/
+          process.cwd(),
           file.path
         );
-        //console.log('fileInputPath:', fileInputPath);
-        //const data = await fs.readFile(fileInputPath);
         const imageBase64 = await fs.promises.readFile(fileInputPath, 'base64');
     
         const ext = path.extname(fileInputPath).toLowerCase();
@@ -50,13 +45,12 @@ export class ImageEditer {
         //await fs.promises.writeFile(filePath, data);
         return `${process.env.FILE_ROOT_URL}${filename}`;*/
       } catch (err) {
-        console.error('File read fail', err);
-        return "file read error";
+        console.error('File read failed:', err.message);
+        return "file read error: " + err.message;
       }
     }
 
-    async bailianQwenGenImage(prompt: string, file: string): Promise<string> {
-      console.log(`bailianQwenGenImage ${prompt}`);
+    async bailianQwenGenImage(prompt, file) {
       try {
         const response = await axios.post('https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation',
           {
@@ -90,13 +84,12 @@ export class ImageEditer {
 
         return response.data.output.choices[0].message.content[0].image;
       } catch (error) {
-        console.error('Error calling Qwen API:', error);
-        // throw error;
-        return `[]`;
+        console.error('API Error:', error.response?.data || error.message);
+        return '[]';
       }
     }
 
-    async bailianQwenGenVideo(prompt: string, files: string[]): Promise<string> {
+    async bailianQwenGenVideo(prompt, files) {
       console.log(`bailianQwenGenVideo ${prompt}`);
       try {
         let input = {};
@@ -140,10 +133,10 @@ export class ImageEditer {
       }
     }
 
-    async handleImageGenerate(req: express.Request, res: express.Response) {
+    async handleImageGenerate(req, res) {
         console.log("handleImageGenerate");
 
-        const files = req.files as Express.Multer.File[];
+        const files = req.files;
         //this.fileLog(files);
         //console.log('Image file req', req.body);
 
@@ -153,7 +146,7 @@ export class ImageEditer {
 	    }
 
         try {
-          let urls: string[] = [];
+          let urls = [];
           for (const file of files) {
             const url = await this.getFileUrl(file);
             urls.push(url);
@@ -167,10 +160,10 @@ export class ImageEditer {
         }
     }
 
-    async handleVideoGenerate(req: express.Request, res: express.Response) {
+    async handleVideoGenerate(req, res) {
         console.log("handleVideoGenerate");
 
-        const files = req.files as Express.Multer.File[];
+        const files = req.files;
         //this.fileLog(files);
         //console.log('file req', req.body);
 
@@ -180,7 +173,7 @@ export class ImageEditer {
 	    }
 
         try {
-          let urls: string[] = [];
+          let urls = [];
           for (const file of files) {
             const url = await this.getFileUrl(file);
             urls.push(url);
@@ -197,7 +190,7 @@ export class ImageEditer {
         }
     }
 
-    async handleVideoRead(req: express.Request, res: express.Response) {
+    async handleVideoRead(req, res) {
         //console.log("handleVideoRead");
         const taskId = req.query.task_id;
         //console.log('taskId', taskId);
@@ -214,7 +207,7 @@ export class ImageEditer {
         }
     }
 
-    async handleReadImageFile(taskId: string) {
+    async handleReadImageFile(taskId) {
       //console.log("handleReadImageFile");
       if (!taskId) {
         return "";
@@ -244,7 +237,7 @@ export class ImageEditer {
       }
     }
 
-    private fileLog(files: Express.Multer.File[]) {
+    fileLog(files) {
         console.log('✅ Files:', files.length);
 
         files.forEach((file, index) => {
@@ -258,29 +251,4 @@ export class ImageEditer {
         console.log('fieldname:', files.map(f => f.fieldname));
     }
 
-    private getAgentId(req: express.Request, res: express.Response) {
-        const agentId = req.params.agentId;
-        if (agentId) {
-            let runtime = this.client.agents.get(agentId);
-            try {
-                if (!runtime) {
-                    runtime = Array.from(this.client.agents.values()).find(
-                        (a) =>
-                            a.character.name.toLowerCase() ===
-                            agentId.toLowerCase()
-                    );
-                }
-            }
-            catch (err) {
-                console.log(err);
-            }
-            //console.log(runtime)
-            if (runtime) {
-                return runtime;
-            }
-            res.status(404).json({ error: "Agent not found" });
-            return;
-        }
-        res.status(400).json({ error: "Missing agent id" });
-    }
 }
