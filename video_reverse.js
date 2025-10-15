@@ -203,12 +203,11 @@ class VideoSplitter {
         return true;
     }
 
-    /**
-     * Web API接口：处理视频拆分请求
-     * @param {Object} req - Express请求对象
-     * @param {Object} res - Express响应对象
-     */
-    static async handleVideoSplit(req, res) {
+    // async function video2flip(req, res) 
+}
+
+
+     async function handleVideoSplit(req, res) {
         try {
             const { splitSeconds } = req.body;
             const file = req.files && req.files[0];
@@ -224,22 +223,22 @@ class VideoSplitter {
             const inputPath = file.path;
             const outputDir = path.join(process.cwd(), 'data', 'output');
 
-            // 验证参数
-            await this.validateSplit(inputPath, splitSeconds);
+            // 验证参数 - 修复：使用 VideoSplitter 类而不是 this
+            await VideoSplitter.validateSplit(inputPath, splitSeconds);
 
-            // 执行拆分
-            const result = await this.splitVideo(inputPath, splitSeconds, outputDir);
+            // 执行拆分 - 修复：使用 VideoSplitter 类而不是 this
+            const result = await VideoSplitter.splitVideo(inputPath, splitSeconds, outputDir);
 
             res.status(200).json({
                 success: true,
                 message: '视频处理完成',
                 result: {
-                    part1: path.basename(result.part1),
-                    part2: path.basename(result.part2),
+                    part1: `http://97.64.21.158:3000/files/output/`+path.basename(result.part1),
+                    part2: `http://97.64.21.158:3000/files/output/`+path.basename(result.part2),
                     description: `第一部分：前${splitSeconds}秒，第二部分：剩余部分 + 翻转部分`
                 }
             });
-
+            return;
         } catch (error) {
             console.error('视频处理失败:', error.message);
             res.status(500).json({ 
@@ -247,9 +246,38 @@ class VideoSplitter {
                 error: error.message 
             });
         }
+        return;
     }
-}
 
+
+// // 主执行流程
+// async function video2flip(req, res) {
+//   console.time('总耗时');
+//   console.log(req.files); 
+//   console.log(req.body.splitTime);
+//   const splitTime = parseFloat(req.body?.splitTime) || 3;
+
+//   if(req.files.length === 0) {
+//     res.status(400).send('请上传视频文件');
+//     return;
+//   }
+ 
+//   try {
+        
+//         await VideoSplitter.validateSplit(req.files[0].path, splitTime);
+//         const result = await VideoSplitter.splitVideo(req.files[0].path, splitTime, outputDir);
+//         console.log('\n处理结果:');
+//         console.log(`第一部分（前${splitTime}秒）: ${result.part1}`);
+//         console.log(`第二部分（剩余部分 + 翻转部分）: ${result.part2}`);
+
+//         console.timeEnd('总耗时');
+//         res.status(200).send(`http://97.64.21.158:3000/files/${result.part1};http://97.64.21.158:3000/files/${result.part2};`);
+//   } catch (error) {
+//     console.error('视频转GIF失败:', error);
+//     res.status(500).send('视频转GIF失败');
+//   }
+
+// }
 // 使用示例
 async function main() {
     try {
@@ -277,4 +305,4 @@ if (require.main === module) {
     main();
 }
 
-module.exports = VideoSplitter;
+module.exports = {handleVideoSplit };

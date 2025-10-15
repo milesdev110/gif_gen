@@ -9,6 +9,7 @@ const ImageEditer = require("./images2video.js").ImageEditer;
 // import multer from "multer";
 const multer = require('multer');
 const { video2gif } = require('./video2gif.js');
+const { handleVideoSplit } = require('./video_reverse.js');
 
 // 删除重复的storageFile配置，使用统一的storage配置
 const storage = multer.diskStorage({
@@ -62,6 +63,16 @@ app.post(
     await video2gif(req, res);
   }
 );
+
+app.post(
+  "/flip_video",
+  uploadFiles.array('files'),
+  async (req, res) => {
+    // await video2flip(req, res);
+    await handleVideoSplit(req, res);
+  }
+);
+
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
