@@ -1,0 +1,281 @@
+import express from "express";
+import { ImageEditer } from "./images";
+import { doRequest } from "./volce-sign";
+
+
+const DEFAULT_SERVICE = 'cv';
+const DEFAULT_REGION = 'cn-north-1';
+
+export class ImageVolceEditer extends ImageEditer {
+
+  async volceGenImageByImage(prompt: string, file: string): Promise<string> {
+    console.log(`volceGenImageByImage ${prompt}`);
+    try {
+      const query = {
+        Action: 'CVSync2AsyncSubmitTask',
+        Version: '2022-08-31'
+      };
+      const params = {
+        req_key: "jimeng_t2i_v40",
+        image_urls: [file],
+        prompt: prompt,
+        force_single: true
+      };
+      const response = await doRequest(DEFAULT_SERVICE, DEFAULT_REGION, 'POST', query, params);
+      console.log('volceGenImageByImage response', response);
+      const data = JSON.parse(response);
+      if (data.code !== 0 && data.code !== 10000) {
+        console.error('volceGenImageByImage error', data.message);
+        return data.message;
+      }
+      const taskId = data.data.task_id;
+      await new Promise(resolve => setTimeout(resolve, 20000));
+      const result = await this.handleReadGenFile(taskId, 'jimeng_t2i_v40');
+      return result;
+    } catch (error) {
+      console.error('Error calling volceGenImageByImage API:', error);
+      // throw error;
+      return `[]`;
+    }
+  }
+
+  async volceGenVideoByFirst(prompt: string, file: string): Promise<string> {
+    console.log(`volceGenVideoByFirst ${prompt}`);
+    try {
+      const query = {
+        Action: 'CVSync2AsyncSubmitTask',
+        Version: '2022-08-31'
+      };
+      const params = {
+        req_key: "jimeng_i2v_first_v30_1080",
+        image_urls: [file],
+        prompt: prompt,
+        seed: 100,
+        frames: 121
+      };
+      const response = await doRequest(DEFAULT_SERVICE, DEFAULT_REGION, 'POST', query, params);
+      console.log('volceGenVideoByFirst response', response);
+      const data = JSON.parse(response);
+      if (data.code !== 0 && data.code !== 10000) {
+        console.error('volceGenVideoByFirst error', data.message);
+        return data.message;
+      }
+      const taskId = data.data.task_id;
+      await new Promise(resolve => setTimeout(resolve, 20000));
+      const result = await this.handleReadGenFile(taskId, 'jimeng_i2v_first_v30_1080');
+      return result;
+    } catch (error) {
+      console.error('Error calling volceGenVideoByFirst API:', error);
+      // throw error;
+      return `[]`;
+    }
+  }
+
+  async volceGenVideoBy2Image(prompt: string, file: string, file2: string): Promise<string> {
+    console.log(`volceGenVideoBy2Image ${prompt}`);
+    try {
+      const query = {
+        Action: 'CVSync2AsyncSubmitTask',
+        Version: '2022-08-31'
+      };
+      const params = {
+        req_key: "jimeng_i2v_first_tail_v30",
+        image_urls: [
+          file, file2
+        ],
+        prompt: prompt,
+        seed: 100,
+        frames: 121
+      };
+      const response = await doRequest(DEFAULT_SERVICE, DEFAULT_REGION, 'POST', query, params);
+      console.log('volceGenVideoBy2Image response', response);
+      const data = JSON.parse(response);
+      if (data.code !== 0 && data.code !== 10000) {
+        console.error('volceGenVideoByFirst error', data.message);
+        return data.message;
+      }
+      const taskId = data.data.task_id;
+      await new Promise(resolve => setTimeout(resolve, 20000));
+      const result = await this.handleReadGenFile(taskId, 'jimeng_i2v_first_tail_v30');
+      return result;
+    } catch (error) {
+      console.error('Error calling volceGenVideoBy2Image API:', error);
+      // throw error;
+      return `[]`;
+    }
+  }
+
+  async volceGenVideoByImitate(prompt: string, image: string, video: string): Promise<string> {
+    console.log(`volceGenVideoByImitate ${prompt}`);
+    try {
+      const query = {
+        Action: 'CVSync2AsyncSubmitTask',
+        Version: '2022-08-31'
+      };
+      const params = {
+        req_key: "jimeng_dream_actor_m1_gen_video_cv",
+        image_url: image,
+        video_url: video
+      };
+      const response = await doRequest(DEFAULT_SERVICE, DEFAULT_REGION, 'POST', query, params);
+      console.log('volceGenVideoByImitate response', response);
+      const data = JSON.parse(response);
+      if (data.code !== 0 && data.code !== 10000) {
+        console.error('volceGenVideoByFirst error', data.message);
+        return data.message;
+      }
+      const taskId = data.data.task_id;
+      await new Promise(resolve => setTimeout(resolve, 20000));
+      const result = await this.handleReadGenFile(taskId, 'jimeng_dream_actor_m1_gen_video_cv');
+      return result;
+    } catch (error) {
+      console.error('Error calling volceGenVideoByImitate API:', error);
+      // throw error;
+      return `[]`;
+    }
+  }
+  
+  async handleImageGenerate(req: express.Request, res: express.Response) {
+    console.log("handleImageGenerate");
+
+    const files = req.files as Express.Multer.File[];
+
+    if (!files || files.length === 0) {
+      console.log('No files received');
+      return res.status(400).send('No image file received');
+    }
+
+    try {
+      let urls: string[] = [];
+      for (const file of files) {
+        const url = await this.getFileUrl(file);
+        urls.push(url);
+      }
+      const result = await this.volceGenImageByImage(req.body.text, urls[0]);
+      res.status(200).send(result);
+    } catch (err) {
+      console.error('[ImageEditerVolce] Error handling genImage:', err);
+      res.status(500).send('fail');
+    }
+  }
+
+  async handleVideoGenerate(req: express.Request, res: express.Response) {
+    console.log("handleVideoGenerate");
+
+    const files = req.files as Express.Multer.File[];
+    //this.fileLog(files);
+    //console.log('file req', req.body);
+
+    if (!files || files.length === 0) {
+      console.log('No files received');
+      return res.status(400).send('No image file received');
+    }
+
+    try {
+      let urls: string[] = [];
+      for (const file of files) {
+        const url = await this.getFileUrl(file);
+        urls.push(url);
+      }
+      let taskId = "";
+      if (urls.length >= 2) {
+        taskId = await this.volceGenVideoBy2Image(req.body.text, urls[0], urls[1]);
+      }
+      else if (urls.length == 1) {
+        taskId = await this.volceGenVideoByFirst(req.body.text, urls[0]);
+      }
+      console.log('Video taskId', taskId);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      //const result = await this.handleReadGenFile(taskId);
+      res.status(200).send(taskId);
+    } catch (err) {
+      console.error('[ImageEditerVolce] Error handling genVideo:', err);
+      res.status(500).send('fail');
+    }
+  }
+
+  async handleAnimateGenerate(req: express.Request, res: express.Response) {
+    console.log("handleAnimateGenerate");
+
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length < 2) {
+      console.log('No files received');
+      return res.status(400).send('No image file received');
+    }
+
+    try {
+      let urls: string[] = [];
+      for (const file of files) {
+        const url = await this.getFileUrl(file);
+        urls.push(url);
+      }
+      const result = await this.volceGenVideoByImitate(req.body.text, urls[0], urls[1]);
+      console.log('Video taskId', result);
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      res.status(200).send(result);
+    } catch (err) {
+      console.error('[ImageEditerVolce] Error handleAnimateGenerate:', err);
+      res.status(500).send('fail');
+    }
+  }
+
+  async handleVideoRead(req: express.Request, res: express.Response) {
+    //console.log("handleVideoRead");
+    const taskId = req.query.task_id;
+    const reqKey = req.query.req_key;
+    console.log('reqKey', reqKey);
+    if (!taskId || !reqKey) {
+      return res.status(400).send('No task_id/req_key received');
+    }
+
+    try {
+      const result = await this.handleReadGenFile(taskId, reqKey);
+      res.status(200).send(result);
+    } catch (err) {
+      console.error('[ImageEditerVolce] Error handleVideoRead:', err);
+      res.status(500).send('fail');
+    }
+  }
+
+  async handleReadGenFile(taskId: string, reqKey: string) {
+    if (!taskId) {
+      return "";
+    }
+      
+    try {
+      const query = {
+        Action: 'CVSync2AsyncGetResult',
+        Version: '2022-08-31'
+      };
+      const params = {
+        req_key: reqKey,
+        task_id: taskId,
+        req_json: "{\"return_url\":true}"
+      };
+      if (reqKey === 'jimeng_dream_actor_m1_gen_video_cv') {
+        delete params.req_json;
+      }
+      console.log('handleReadGenFile params', params);
+      const response = await doRequest(DEFAULT_SERVICE, DEFAULT_REGION, 'POST', query, params);
+      console.log('handleReadGenFile response', response);
+      const data = JSON.parse(response);
+      if (data.code !== 0 && data.code !== 10000) {
+        console.error('handleReadGenFile error', data.message);
+        return data.message;
+      }
+      if (data.data.status === 'done') {
+        console.log('handleReadGenFile response', data.data);
+        return data.data.video_url || data.data.image_urls[0] || data.data.image_url;
+      }
+      else {
+        //return response.data.task_id;
+        return params;
+      }
+    } catch (error) {
+      console.error('Error calling handleReadGenFile API:', error);
+      // throw error;
+      return `[]`;
+    }
+  }
+
+}
