@@ -38,7 +38,7 @@ async function removeBg(blob: Blob): Promise<ArrayBuffer> {
 
   const response = await fetch("https://api.remove.bg/v1.0/removebg", {
     method: "POST",
-    headers: { "X-Api-Key": "26TZbpFJpi7D3VvedLPbtWwK" },
+    headers: { "X-Api-Key": "Y2WyPs2cUW6nxHB2ng18A1D1" },
     body: formData,
   });
 
@@ -83,7 +83,8 @@ async function generateGif(): Promise<string> {
     // 第一步：生成调色板
     console.log('开始生成调色板...');
     const { stdout: paletteStdout, stderr: paletteStderr } = await execAsync(
-      'ffmpeg -framerate 10 -i nobg_frames/nobg_frame_%04d.png -vf "palettegen" nobg_frames/palette.png'
+        `ffmpeg -i nobg_frames/nobg_frame_%04d.png -vf "palettegen=stats_mode=diff" -y nobg_frames/palette4.png`
+    //   'ffmpeg -framerate 10 -i nobg_frames/nobg_frame_%04d.png -vf "palettegen" nobg_frames/palette.png'
     );
     
     if (paletteStderr) {
@@ -96,7 +97,8 @@ async function generateGif(): Promise<string> {
     const timeStamp = Date.now();
     const filename = `output_${timeStamp}.gif`;
     const { stdout: gifStdout, stderr: gifStderr } = await execAsync(
-      `ffmpeg -framerate 10 -i nobg_frames/nobg_frame_%04d.png -i nobg_frames/palette.png -lavfi "paletteuse" data/${filename}`
+        `ffmpeg -r 10 -i nobg_frames/nobg_frame_%04d.png -i nobg_frames/palette4.png -filter_complex "[0:v][1:v]paletteuse=dither=bayer:diff_mode=rectangle" -loop 0 -y data/${filename}`
+    //   `ffmpeg -framerate 10 -i nobg_frames/nobg_frame_%04d.png -i nobg_frames/palette.png -lavfi "paletteuse" data/${filename}`
     );
     
     if (gifStderr) {
