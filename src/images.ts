@@ -24,7 +24,7 @@ export class ImageEditer {
         const imageBase64 = await fs.promises.readFile(fileInputPath, 'base64');
     
         const ext = path.extname(fileInputPath).toLowerCase();
-        const mimeTypes = {
+        const mimeTypes: Record<string, string> = {
           '.png': 'image/png',
           '.jpg': 'image/jpeg',
           '.jpeg': 'image/jpeg',
@@ -219,7 +219,7 @@ export class ImageEditer {
       }
     }
 
-    async handleImageGenerate(req: express.Request, res: express.Response) {
+    async handleImageGenerate(req: express.Request, res: express.Response): Promise<void> {
         console.log("handleImageGenerate");
 
         const files = req.files as Express.Multer.File[];
@@ -228,7 +228,8 @@ export class ImageEditer {
 
         if (!files || files.length === 0) {
           console.log('No files received');
-          return res.status(400).send('No image file received');
+          res.status(400).send('No image file received');
+          return;
         }
 
         try {
@@ -246,7 +247,7 @@ export class ImageEditer {
         }
     }
 
-    async handleVideoGenerate(req: express.Request, res: express.Response) {
+    async handleVideoGenerate(req: express.Request, res: express.Response): Promise<void> {
         console.log("handleVideoGenerate");
 
         const files = req.files as Express.Multer.File[];
@@ -255,7 +256,8 @@ export class ImageEditer {
 
         if (!files || files.length === 0) {
           console.log('No files received');
-          return res.status(400).send('No image file received');
+          res.status(400).send('No image file received');
+          return;
         }
 
         try {
@@ -276,7 +278,7 @@ export class ImageEditer {
         }
     }
 
-    async handleAnimateGenerate(req: express.Request, res: express.Response) {
+    async handleAnimateGenerate(req: express.Request, res: express.Response): Promise<void> {
         console.log("handleAnimateGenerate");
 
         const files = req.files as Express.Multer.File[];
@@ -284,7 +286,8 @@ export class ImageEditer {
         //console.log('Image file req', req.body);
         if (!files || files.length < 2) {
           console.log('No enough files received');
-          return res.status(400).send('No enough file received');
+          res.status(400).send('No enough file received');
+          return;
         }
 
         try {
@@ -307,12 +310,13 @@ export class ImageEditer {
         }
     }
 
-    async handleVideoRead(req: express.Request, res: express.Response) {
+    async handleVideoRead(req: express.Request, res: express.Response): Promise<void> {
         //console.log("handleVideoRead");
-        const taskId = req.query.task_id;
+        const taskId = req.query.task_id as string;
         //console.log('taskId', taskId);
         if (!taskId) {
-          return res.status(400).send('No task_id received');
+          res.status(400).send('No task_id received');
+          return;
         }
 
         try {
@@ -362,7 +366,8 @@ export class ImageEditer {
     async handleVideoBgRemove(req: express.Request, res: express.Response) {
       const videoUrl = req.body.video_url;
       if (!videoUrl) {
-        return res.status(400).send('No video_url received');
+        res.status(400).send('No video_url received');
+        return;
       }
 
       try {
@@ -379,10 +384,11 @@ export class ImageEditer {
 
     async handleVideoBgJobStatus(req: express.Request, res: express.Response) {
       //console.log("handleVideoBgJobStatus");
-      const jobId = req.query.job_id;
+      const jobId = req.query.job_id as string;
       //console.log('jobId', jobId);
       if (!jobId) {
-        return res.status(400).send('No job_id received');
+        res.status(400).send('No job_id received');
+        return;
       }
 
       try {

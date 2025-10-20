@@ -5,6 +5,17 @@ import * as path from 'path';
 import FormData from 'form-data';
 //import { DateTime } from 'luxon';
 
+// 定义 PolicyData 接口
+interface PolicyData {
+  upload_dir: string;
+  oss_access_key_id: string;
+  signature: string;
+  policy: string;
+  x_oss_object_acl: string;
+  x_oss_forbid_overwrite: string;
+  upload_host: string;
+}
+
 /**
  * 获取文件上传凭证
  */
@@ -26,8 +37,10 @@ export async function getUploadPolicy(apiKey: string, modelName: string) {
     }
     return response.data.data;
   } catch (error) {
-    if (error.response) {
-      throw new Error(`GetPolicy failed: ${error.response.data.message || error.response.statusText}`);
+    // 修复 error 类型问题
+    const axiosError = error as any;
+    if (axiosError.response) {
+      throw new Error(`GetPolicy failed: ${axiosError.response.data.message || axiosError.response.statusText}`);
     } else {
       throw error;
     }
@@ -37,7 +50,7 @@ export async function getUploadPolicy(apiKey: string, modelName: string) {
 /**
  * 将文件上传到临时存储OSS
  */
-export async function uploadFileToOSS(policyData, filePath: string) {
+export async function uploadFileToOSS(policyData: PolicyData, filePath: string) {
   const fileName = path.basename(filePath);
   const key = `${policyData.upload_dir}/${fileName}`;
 
@@ -65,10 +78,12 @@ export async function uploadFileToOSS(policyData, filePath: string) {
 
     return `oss://${key}`;
   } catch (error) {
-    if (error.response) {
-      throw new Error(`Upload failed: ${error.response.data ? error.response.data.toString() : error.response.statusText}`);
+    // 修复 error 类型问题
+    const axiosError = error as any;
+    if (axiosError.response) {
+      throw new Error(`Upload failed: ${axiosError.response.data ? axiosError.response.data.toString() : axiosError.response.statusText}`);
     } else {
-      throw new Error(`Request error: ${error.message}`);
+      throw new Error(`Request error: ${axiosError.message}`);
     }
   }
 }
@@ -78,7 +93,7 @@ export async function uploadFileToOSS(policyData, filePath: string) {
  */
 function mimeLookup(filename: string) {
   const ext = path.extname(filename).toLowerCase();
-  const map = {
+  const map: Record<string, string> = {
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
@@ -127,6 +142,8 @@ async function test() {
     console.log(`URL: ${publicUrl}`);
     console.log("Success");
   } catch (error) {
-    console.error('Error:', error.message);
+    // 修复 error 类型问题
+    const err = error as Error;
+    console.error('Error:', err.message);
   }
 }

@@ -2,7 +2,6 @@ import express from "express";
 import { ImageEditer } from "./images";
 import { doRequest } from "./volce-sign";
 
-
 const DEFAULT_SERVICE = 'cv';
 const DEFAULT_REGION = 'cn-north-1';
 
@@ -34,7 +33,6 @@ export class ImageVolceEditer extends ImageEditer {
       return result;
     } catch (error) {
       console.error('Error calling volceGenImageByImage API:', error);
-      // throw error;
       return `[]`;
     }
   }
@@ -66,7 +64,6 @@ export class ImageVolceEditer extends ImageEditer {
       return result;
     } catch (error) {
       console.error('Error calling volceGenVideoByFirst API:', error);
-      // throw error;
       return `[]`;
     }
   }
@@ -100,7 +97,6 @@ export class ImageVolceEditer extends ImageEditer {
       return result;
     } catch (error) {
       console.error('Error calling volceGenVideoBy2Image API:', error);
-      // throw error;
       return `[]`;
     }
   }
@@ -130,19 +126,19 @@ export class ImageVolceEditer extends ImageEditer {
       return result;
     } catch (error) {
       console.error('Error calling volceGenVideoByImitate API:', error);
-      // throw error;
       return `[]`;
     }
   }
   
-  async handleImageGenerate(req: express.Request, res: express.Response) {
+  async handleImageGenerate(req: express.Request, res: express.Response): Promise<void> {
     console.log("handleImageGenerate");
 
     const files = req.files as Express.Multer.File[];
 
     if (!files || files.length === 0) {
       console.log('No files received');
-      return res.status(400).send('No image file received');
+      res.status(400).send('No image file received');
+      return;
     }
 
     try {
@@ -159,16 +155,15 @@ export class ImageVolceEditer extends ImageEditer {
     }
   }
 
-  async handleVideoGenerate(req: express.Request, res: express.Response) {
+  async handleVideoGenerate(req: express.Request, res: express.Response): Promise<void> {
     console.log("handleVideoGenerate");
 
     const files = req.files as Express.Multer.File[];
-    //this.fileLog(files);
-    //console.log('file req', req.body);
 
     if (!files || files.length === 0) {
       console.log('No files received');
-      return res.status(400).send('No image file received');
+      res.status(400).send('No image file received');
+      return;
     }
 
     try {
@@ -186,7 +181,6 @@ export class ImageVolceEditer extends ImageEditer {
       }
       console.log('Video taskId', taskId);
       await new Promise(resolve => setTimeout(resolve, 2000));
-      //const result = await this.handleReadGenFile(taskId);
       res.status(200).send(taskId);
     } catch (err) {
       console.error('[ImageEditerVolce] Error handling genVideo:', err);
@@ -194,13 +188,14 @@ export class ImageVolceEditer extends ImageEditer {
     }
   }
 
-  async handleAnimateGenerate(req: express.Request, res: express.Response) {
+  async handleAnimateGenerate(req: express.Request, res: express.Response): Promise<void> {
     console.log("handleAnimateGenerate");
 
     const files = req.files as Express.Multer.File[];
     if (!files || files.length < 2) {
       console.log('No files received');
-      return res.status(400).send('No image file received');
+      res.status(400).send('No image file received');
+      return;
     }
 
     try {
@@ -219,13 +214,13 @@ export class ImageVolceEditer extends ImageEditer {
     }
   }
 
-  async handleVideoRead(req: express.Request, res: express.Response) {
-    //console.log("handleVideoRead");
-    const taskId = req.query.task_id;
-    const reqKey = req.query.req_key;
+  async handleVideoRead(req: express.Request, res: express.Response): Promise<void> {
+    const taskId = req.query.task_id as string;
+    const reqKey = req.query.req_key as string;
     console.log('reqKey', reqKey);
     if (!taskId || !reqKey) {
-      return res.status(400).send('No task_id/req_key received');
+      res.status(400).send('No task_id/req_key received');
+      return;
     }
 
     try {
@@ -237,7 +232,7 @@ export class ImageVolceEditer extends ImageEditer {
     }
   }
 
-  async handleReadGenFile(taskId: string, reqKey: string) {
+  async handleReadGenFile(taskId: string, reqKey: string): Promise<string> {
     if (!taskId) {
       return "";
     }
@@ -247,14 +242,17 @@ export class ImageVolceEditer extends ImageEditer {
         Action: 'CVSync2AsyncGetResult',
         Version: '2022-08-31'
       };
-      const params = {
+      // 使用条件逻辑构建params对象，而不是先定义再删除
+      const params: any = {
         req_key: reqKey,
-        task_id: taskId,
-        req_json: "{\"return_url\":true}"
+        task_id: taskId
       };
-      if (reqKey === 'jimeng_dream_actor_m1_gen_video_cv') {
-        delete params.req_json;
+      
+      // 只有当reqKey不是特定值时，才添加req_json属性
+      if (reqKey !== 'jimeng_dream_actor_m1_gen_video_cv') {
+        params.req_json = "{\"return_url\":true}";
       }
+      
       console.log('handleReadGenFile params', params);
       const response = await doRequest(DEFAULT_SERVICE, DEFAULT_REGION, 'POST', query, params);
       console.log('handleReadGenFile response', response);
@@ -268,14 +266,11 @@ export class ImageVolceEditer extends ImageEditer {
         return data.data.video_url || data.data.image_urls[0] || data.data.image_url;
       }
       else {
-        //return response.data.task_id;
-        return params;
+        return JSON.stringify(params);
       }
     } catch (error) {
       console.error('Error calling handleReadGenFile API:', error);
-      // throw error;
       return `[]`;
     }
   }
-
 }

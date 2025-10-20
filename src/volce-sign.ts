@@ -37,7 +37,7 @@ const HEADER_KEYS_TO_IGNORE = new Set([
 ]);
 
 // do request example
-export async function doRequest(service, region, method, query, body = null) {
+export async function doRequest(service: string, region: string, method: string, query: any, body: any = null) {
     const signParams = {
         headers: {
             // x-date header 是必传的
@@ -73,7 +73,7 @@ export async function doRequest(service, region, method, query, body = null) {
 }
 
 
-function sign(params) {
+function sign(params: any) {
     const {
         headers = {},
         query = {},
@@ -117,15 +117,15 @@ function sign(params) {
     ].join(' ');
 }
 
-function hmac(secret, s) {
+function hmac(secret: string | Buffer, s: string): Buffer {
     return crypto.createHmac('sha256', secret).update(s, 'utf8').digest();
 }
 
-function hash(s) {
+function hash(s: string): string {
     return crypto.createHash('sha256').update(s, 'utf8').digest('hex');
 }
 
-function queryParamsToString(params) {
+function queryParamsToString(params: Record<string, any>): string {
     return Object.keys(params)
         .sort()
         .map((key) => {
@@ -146,8 +146,8 @@ function queryParamsToString(params) {
         .join('&');
 }
 
-function getSignHeaders(originHeaders, needSignHeaders) {
-    function trimHeaderValue(header) {
+function getSignHeaders(originHeaders: Record<string, any>, needSignHeaders: string[]): [string, string] {
+    function trimHeaderValue(header: any): string {
         return header.toString?.().trim().replace(/\s+/g, ' ') ?? '';
     }
 
@@ -171,7 +171,7 @@ function getSignHeaders(originHeaders, needSignHeaders) {
     return [signedHeaderKeys, canonicalHeaders];
 }
 
-function uriEscape(str) {
+function uriEscape(str: string): string {
     try {
         return encodeURIComponent(str)
             .replace(/[^A-Za-z0-9_.~\-%]+/g, escape)
@@ -181,13 +181,13 @@ function uriEscape(str) {
     }
 }
 
-function getDateTimeNow() {
+function getDateTimeNow(): string {
     const now = new Date();
     return now.toISOString().replace(/[:-]|\.\d{3}/g, '');
 }
 
 // 获取 body sha256
-function getBodySha(body) {
+function getBodySha(body: string | Buffer | url.URLSearchParams): string {
     //console.log('getBodySha body', body);
     //console.log('getBodySha body type', typeof body);
     const hash = crypto.createHash('sha256');
