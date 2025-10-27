@@ -95,7 +95,7 @@ app.get(
 )
 
 app.post(
-  '/video2gif',
+  '/:agentId/video2gif',
   uploadFiles.array('files'),
   async (req: express.Request, res: express.Response) => {
     await video2gif(req, res)

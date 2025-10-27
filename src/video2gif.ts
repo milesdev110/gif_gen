@@ -28,7 +28,9 @@ async function extractFrames(filename: string, fps: number = 10): Promise<void> 
     if (!fs.existsSync(framesDir)) {
       fs.mkdirSync(framesDir);
     }
-    const command = `${ffmpegPath} -i ${filename} -vf fps=${fps} frames/frame_%04d.png`;
+    // 转义文件路径，防止空格和特殊字符问题
+    const escapedFilename = `"${filename}"`;
+    const command = `${ffmpegPath} -i ${escapedFilename} -vf fps=${fps} frames/frame_%04d.png`;
     console.log('🎞️  执行命令:', command);
     console.log(`📊 提取帧率: ${fps} fps`);
     await execAsync(command);
@@ -168,6 +170,13 @@ export async function video2gif(req: express.Request, res: express.Response): Pr
     console.log('   - 跳过背景去除:', skipBgRemoval);
     console.log('   - 帧率 (fps):', fps);
     
+    // 确保data目录存在
+    const dataDir = join(process.cwd(), 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+      console.log('📁 创建data目录:', dataDir);
+    }
+    
     // 删除 frames 和 nobg_frames 目录及其内容
     const framesDir = join(process.cwd(), 'frames');
     const nobgFramesDir = join(process.cwd(), 'nobg_frames');
@@ -195,8 +204,10 @@ export async function video2gif(req: express.Request, res: express.Response): Pr
     const gifName = await generateGif(skipBgRemoval, fps);
     
     // 返回本地文件URL（通过 /files 静态服务访问）
-    // 注意：不使用 FILE_ROOT_URL，因为GIF文件在本地服务器上
-    const fileUrl = `http://localhost:3000/files/${gifName}`;
+    // 使用环境变量或回退到默认值
+    let fileRootUrl = process.env.FILE_ROOT_URL || 'http://localhost:3000/files/';
+    if (!fileRootUrl.endsWith('/')) fileRootUrl += '/';
+    const fileUrl = `${fileRootUrl}${gifName}`;
     
     console.log('✅ GIF生成成功:', fileUrl);
     console.log('📁 GIF本地路径:', join(process.cwd(), 'data', gifName));
