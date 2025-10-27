@@ -164,7 +164,7 @@ export class ImageVolceEditer extends ImageEditer {
       
       // 获取白边扩展参数（可选）
       const expandBorder = true; // 默认true
-      const imageAreaRatio = 0.75; // 默认0.75 (75%)
+      const imageAreaRatio = 0.5; // 默认0.5 (50%)
       console.log('⚙️  图片处理参数: expandBorder =', expandBorder, ', imageAreaRatio =', imageAreaRatio);
       
       const result = await this.volceGenImageByImage(req.body.text, urls[0], expandBorder, imageAreaRatio);

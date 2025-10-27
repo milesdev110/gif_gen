@@ -89,7 +89,7 @@ export class ImageEditer {
      * @param targetRatio 目标长宽比，如 16/9 或 9/16，null表示保持原图比例
      * @returns base64格式的处理后图片
      */
-    async addWhiteBackgroundToGenerated(imageUrl: string, petScale: number = 0.7, targetRatio: number | null = null): Promise<string> {
+    async addWhiteBackgroundToGenerated(imageUrl: string, petScale: number = 0.5, targetRatio: number | null = null): Promise<string> {
       console.log('🖼️  开始处理图片，添加白色背景...');
       console.log('📥 原图URL:', imageUrl.substring(0, 100) + '...');
       
