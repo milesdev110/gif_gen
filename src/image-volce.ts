@@ -7,8 +7,9 @@ const DEFAULT_REGION = 'cn-north-1';
 
 export class ImageVolceEditer extends ImageEditer {
 
-  async volceGenImageByImage(prompt: string, file: string): Promise<string> {
+  async volceGenImageByImage(prompt: string, file: string, expandBorder: boolean = true, imageAreaRatio: number = 0.75): Promise<string> {
     console.log(`volceGenImageByImage ${prompt}`);
+    console.log(`⚙️  扩展白边: ${expandBorder}, 原图占比: ${(imageAreaRatio * 100).toFixed(1)}%`);
     try {
       const query = {
         Action: 'CVSync2AsyncSubmitTask',
@@ -29,8 +30,21 @@ export class ImageVolceEditer extends ImageEditer {
       }
       const taskId = data.data.task_id;
       await new Promise(resolve => setTimeout(resolve, 20000));
-      const result = await this.handleReadGenFile(taskId, 'jimeng_t2i_v40');
-      return result;
+      const imageUrl = await this.handleReadGenFile(taskId, 'jimeng_t2i_v40');
+      
+      // 如果需要扩展白边，则处理图片
+      if (expandBorder && imageUrl && !imageUrl.startsWith('[') && !imageUrl.includes('error')) {
+        console.log('🎨 开始扩展白边处理...');
+        try {
+          const processedImage = await this.expandWhiteBorder(imageUrl, imageAreaRatio);
+          return processedImage;
+        } catch (error) {
+          console.error('⚠️  白边扩展失败，返回原图:', error);
+          return imageUrl;
+        }
+      }
+      
+      return imageUrl;
     } catch (error) {
       console.error('Error calling volceGenImageByImage API:', error);
       return `[]`;
@@ -147,7 +161,13 @@ export class ImageVolceEditer extends ImageEditer {
         const url = await this.getFileUrl(file);
         urls.push(url);
       }
-      const result = await this.volceGenImageByImage(req.body.text, urls[0]);
+      
+      // 获取白边扩展参数（可选）
+      const expandBorder = req.body.expandBorder !== 'false' && req.body.expandBorder !== false; // 默认true
+      const imageAreaRatio = parseFloat(req.body.imageAreaRatio) || 0.75; // 默认0.75 (75%)
+      console.log('⚙️  图片处理参数: expandBorder =', expandBorder, ', imageAreaRatio =', imageAreaRatio);
+      
+      const result = await this.volceGenImageByImage(req.body.text, urls[0], expandBorder, imageAreaRatio);
       res.status(200).send(result);
     } catch (err) {
       console.error('[ImageEditerVolce] Error handling genImage:', err);

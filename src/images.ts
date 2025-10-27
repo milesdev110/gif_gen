@@ -11,6 +11,78 @@ export class ImageEditer {
     constructor() {}
 
     /**
+     * 扩展白边，使原图占新图的指定比例（保持原图比例不变）
+     * @param imageUrl 图片URL
+     * @param imageAreaRatio 原图占新图的面积比例，默认0.75（即75%）
+     * @returns base64格式的处理后图片
+     */
+    async expandWhiteBorder(imageUrl: string, imageAreaRatio: number = 0.75): Promise<string> {
+      console.log('🖼️  开始扩展白边，原图占比:', (imageAreaRatio * 100).toFixed(1) + '%');
+      console.log('📥 原图URL:', imageUrl.substring(0, 100) + '...');
+      
+      try {
+        // 1. 下载图片
+        const response = await axios.get(imageUrl, {
+          responseType: 'arraybuffer'
+        });
+        const imageBuffer = Buffer.from(response.data);
+        console.log('✅ 图片下载完成，大小:', imageBuffer.length, 'bytes');
+        
+        // 2. 获取原图元数据
+        const metadata = await sharp(imageBuffer).metadata();
+        const originalWidth = metadata.width || 1024;
+        const originalHeight = metadata.height || 1024;
+        console.log('📐 原图尺寸:', originalWidth, 'x', originalHeight);
+        
+        // 3. 计算新画布尺寸（保持原图比例，扩大画布）
+        // 面积比 = imageAreaRatio，所以线性比 = sqrt(imageAreaRatio)
+        const linearScale = Math.sqrt(imageAreaRatio);
+        const canvasWidth = Math.round(originalWidth / linearScale);
+        const canvasHeight = Math.round(originalHeight / linearScale);
+        
+        console.log('📐 新画布尺寸:', canvasWidth, 'x', canvasHeight);
+        console.log('📏 线性缩放比例:', linearScale.toFixed(3));
+        console.log('📊 实际面积占比:', ((originalWidth * originalHeight) / (canvasWidth * canvasHeight) * 100).toFixed(1) + '%');
+        
+        // 4. 计算原图在画布上的居中位置
+        const x = Math.floor((canvasWidth - originalWidth) / 2);
+        const y = Math.floor((canvasHeight - originalHeight) / 2);
+        console.log('📍 原图居中位置:', `(${x}, ${y})`);
+        
+        // 5. 创建白色背景画布并将原图居中合成
+        const processedBuffer = await sharp({
+          create: {
+            width: canvasWidth,
+            height: canvasHeight,
+            channels: 4,
+            background: { r: 255, g: 255, b: 255, alpha: 1 } // 白色背景
+          }
+        })
+        .composite([{
+          input: imageBuffer,
+          top: y,
+          left: x
+        }])
+        .png({ quality: 95 })
+        .toBuffer();
+        
+        // 6. 验证最终输出
+        const finalMeta = await sharp(processedBuffer).metadata();
+        console.log('✅ 最终输出尺寸:', finalMeta.width, 'x', finalMeta.height);
+        console.log('✅ 图片处理完成，输出大小:', processedBuffer.length, 'bytes');
+        
+        // 7. 转换为base64
+        const base64 = `data:image/png;base64,${processedBuffer.toString('base64')}`;
+        console.log('✅ 转换为base64完成，长度:', base64.length);
+        
+        return base64;
+      } catch (error: any) {
+        console.error('❌ 图片处理失败:', error.message);
+        throw error;
+      }
+    }
+
+    /**
      * 为生成的图片添加白色背景，缩小宠物并居中
      * @param imageUrl 图片URL（阿里云返回的URL）
      * @param petScale 宠物缩放比例，默认0.7（占画面70%）
