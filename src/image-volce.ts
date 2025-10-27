@@ -163,8 +163,8 @@ export class ImageVolceEditer extends ImageEditer {
       }
       
       // 获取白边扩展参数（可选）
-      const expandBorder = req.body.expandBorder !== 'false' && req.body.expandBorder !== false; // 默认true
-      const imageAreaRatio = parseFloat(req.body.imageAreaRatio) || 0.75; // 默认0.75 (75%)
+      const expandBorder = true; // 默认true
+      const imageAreaRatio = 0.75; // 默认0.75 (75%)
       console.log('⚙️  图片处理参数: expandBorder =', expandBorder, ', imageAreaRatio =', imageAreaRatio);
       
       const result = await this.volceGenImageByImage(req.body.text, urls[0], expandBorder, imageAreaRatio);
