@@ -5,8 +5,8 @@ import express from 'express';
 
 // 正确设置 ffmpeg 路径
 try {
-  const ffmpegStatic = require('ffmpeg-static');
-  ffmpeg.setFfmpegPath(ffmpegStatic);
+  const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+  ffmpeg.setFfmpegPath(ffmpegInstaller.path);
   console.log('FFmpeg路径设置成功');
 } catch (error: any) {
   console.warn('FFmpeg路径设置警告:', error.message);
