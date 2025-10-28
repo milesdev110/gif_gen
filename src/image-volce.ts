@@ -29,7 +29,7 @@ export class ImageVolceEditer extends ImageEditer {
         return data.message;
       }
       const taskId = data.data.task_id;
-      await new Promise(resolve => setTimeout(resolve, 20000));
+      await new Promise(resolve => setTimeout(resolve, 40000));
       const imageUrl = await this.handleReadGenFile(taskId, 'jimeng_t2i_v40');
       
       // 如果需要扩展白边，则处理图片
@@ -73,7 +73,7 @@ export class ImageVolceEditer extends ImageEditer {
         return data.message;
       }
       const taskId = data.data.task_id;
-      await new Promise(resolve => setTimeout(resolve, 20000));
+      await new Promise(resolve => setTimeout(resolve, 40000));
       const result = await this.handleReadGenFile(taskId, 'jimeng_i2v_first_v30_1080');
       return result;
     } catch (error) {
@@ -106,7 +106,7 @@ export class ImageVolceEditer extends ImageEditer {
         return data.message;
       }
       const taskId = data.data.task_id;
-      await new Promise(resolve => setTimeout(resolve, 20000));
+      await new Promise(resolve => setTimeout(resolve, 40000));
       const result = await this.handleReadGenFile(taskId, 'jimeng_i2v_first_tail_v30');
       return result;
     } catch (error) {
@@ -135,7 +135,7 @@ export class ImageVolceEditer extends ImageEditer {
         return data.message;
       }
       const taskId = data.data.task_id;
-      await new Promise(resolve => setTimeout(resolve, 20000));
+      await new Promise(resolve => setTimeout(resolve, 40000));
       const result = await this.handleReadGenFile(taskId, 'jimeng_dream_actor_m1_gen_video_cv');
       return result;
     } catch (error) {

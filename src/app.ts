@@ -7,6 +7,11 @@ import { ImageVolceEditer } from "./image-volce";
 import { video2gif } from './video2gif'
 import { handleVideoSplit } from './video_reverse'
 
+import dotenv from "dotenv";
+
+dotenv.config();
+
+
 // 删除重复的storageFile配置，使用统一的storage配置
 const storage = multer.diskStorage({
   destination: (
@@ -109,6 +114,40 @@ app.post(
     await handleVideoSplit(req, res)
   }
 )
+
+// File Url
+const aifilepath = path.join(process.cwd(), "/files");
+app.use((req, res, next) => {
+    console.log("req.path:  " + req.path);
+    if(req.path.indexOf("/media/files") === -1) {
+        next();
+        return;
+    }
+    const fullPath = req.path;
+    const basePath = "/media/files";
+    const newPath = path.relative(basePath, fullPath);
+    const filePath = path.join(process.cwd(), "files", newPath);
+    console.log("fix path:  " + filePath);
+    if(fs.existsSync(filePath) === false) {
+        res.status(404).send("File not found");
+        return;
+    }
+
+    fs.stat(filePath, (err, stats) => {
+        if (err) return next(err);
+        const now = Date.now();
+        const fileAge = now - stats.mtimeMs;
+        if (fileAge > 300 * 24 * 3600000) {
+            res.status(403).send("文件已过期");
+        } else {
+            next();
+        }
+    });
+});
+app.use(
+    "/media/files",
+    express.static(aifilepath)
+);
 
 app.get('/', (req: express.Request, res: express.Response) => {
   res.send('Hello World!')
