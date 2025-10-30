@@ -470,6 +470,7 @@ export class ImageEditer {
           },
           parameters: {
             "negative_prompt": "",
+            "seed": 1000,
             "watermark": false
             // 注意：qwen-image-edit 模型不支持 size 参数
             // 只能通过提示词来引导生成特定比例
@@ -557,6 +558,7 @@ export class ImageEditer {
             parameters: {
               "audio": false,
               "resolution": "480P",
+              "seed": 1000,
               "prompt_extend": false
             }
         }, {
@@ -588,6 +590,7 @@ export class ImageEditer {
             },
             parameters: {
               "check_image": false,
+              "seed": 1000,
               "mode": 'wan-std'
             }
           }, {
