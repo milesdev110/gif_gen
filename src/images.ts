@@ -3,6 +3,7 @@ import express from "express";
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
+// import { URLSearchParams } from 'url';
 import sharp from 'sharp';
 import { uploadFileAndGetUrl } from "./oss";
 
@@ -287,6 +288,7 @@ export class ImageEditer {
       }
     }
 
+    
     async getFileUrl(file: Express.Multer.File): Promise<string> {
       console.log('📁 getFileUrl called with file:', file ? {
         fieldname: file.fieldname,
@@ -338,6 +340,63 @@ export class ImageEditer {
         return "getFileUrl error";
       }
     }
+    
+
+    // async getFileUrl(file: Express.Multer.File): Promise<string> {
+    //   console.log('🐞 [Debug] getFileUrl called with file:', file ? {
+    //     fieldname: file.fieldname,
+    //     originalname: file.originalname,
+    //     mimetype: file.mimetype,
+    //     size: file.size,
+    //     path: file.path
+    //   } : 'null');
+
+    //   if (!file || !file.path) {
+    //     console.error('❌ [Debug] file not found or no path');
+    //     return 'file empty';
+    //   }
+
+    //   try {
+    //     const fileBuffer = await fs.promises.readFile(file.path);
+    //     const base64Image = fileBuffer.toString('base64');
+    //     const normalizedName = file.originalname.toLowerCase().endsWith('.jpg')
+    //       ? file.originalname.replace(/\.jpg$/i, '.jpeg')
+    //       : file.originalname;
+
+    //     const apiKey = process.env.IMGBB_API_KEY || '94a79afafe957256f0406e0251e38da6';
+    //     if (!apiKey) {
+    //       console.error('❌ [Debug] IMGBB API key missing');
+    //       return 'imgbb api key missing';
+    //     }
+
+    //     const formData = new URLSearchParams();
+    //     formData.append('image', base64Image);
+    //     formData.append('name', normalizedName);
+
+    //     console.log('🚀 [Debug] Uploading image to imgbb...');
+    //     const response = await axios.post(
+    //       `https://api.imgbb.com/1/upload?key=${apiKey}`,
+    //       formData.toString(),
+    //       {
+    //         headers: {
+    //           'Content-Type': 'application/x-www-form-urlencoded'
+    //         }
+    //       }
+    //     );
+
+    //     const url = response.data?.data?.url;
+    //     if (!url) {
+    //       console.error('❌ [Debug] Upload succeeded but no URL returned:', response.data);
+    //       return 'imgbb upload no url';
+    //     }
+
+    //     console.log('🌍 [Debug] Public image URL:', url);
+    //     return url;
+    //   } catch (error: any) {
+    //     console.error('❌ [Debug] Failed to upload image to imgbb:', error?.response?.data || error?.message || error);
+    //     return 'getFileUrl error';
+    //   }
+    // }
   
     async getFilePath(file: Express.Multer.File): Promise<string> {
       if (!file || !file.path) {
